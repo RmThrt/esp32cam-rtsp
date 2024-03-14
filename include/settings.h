@@ -33,7 +33,7 @@
 #define DEFAULT_WPC true
 #define DEFAULT_RAW_GAMMA true
 #define DEFAULT_LENC true
-#define DEFAULT_HORIZONTAL_MIRROR false
+#define DEFAULT_HORIZONTAL_MIRROR true
 #define DEFAULT_VERTICAL_MIRROR false
 #define DEFAULT_DCW true
 #define DEFAULT_COLORBAR false

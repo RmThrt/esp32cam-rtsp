@@ -22,7 +22,7 @@ extern const char index_html_min_start[] asm("_binary_html_index_min_html_start"
 auto param_group_camera = iotwebconf::ParameterGroup("camera", "Camera settings");
 auto param_frame_duration = iotwebconf::Builder<iotwebconf::UIntTParameter<unsigned long>>("fd").label("Frame duration (ms)").defaultValue(DEFAULT_FRAME_DURATION).min(10).build();
 auto param_frame_size = iotwebconf::Builder<iotwebconf::SelectTParameter<sizeof(frame_sizes[0])>>("fs").label("Frame size").optionValues((const char *)&frame_sizes).optionNames((const char *)&frame_sizes).optionCount(sizeof(frame_sizes) / sizeof(frame_sizes[0])).nameLength(sizeof(frame_sizes[0])).defaultValue(DEFAULT_FRAME_SIZE).build();
-auto param_jpg_quality = iotwebconf::Builder<iotwebconf::UIntTParameter<byte>>("q").label("JPG quality").defaultValue(DEFAULT_JPEG_QUALITY).min(1).max(100).build();
+auto param_jpg_quality = iotwebconf::Builder<iotwebconf::UIntTParameter<byte>>("q").label("JPG quality").defaultValue(DEFAULT_JPEG_QUALITY - 6).min(1).max(100).build() ;
 auto param_brightness = iotwebconf::Builder<iotwebconf::IntTParameter<int>>("b").label("Brightness").defaultValue(DEFAULT_BRIGHTNESS).min(-2).max(2).build();
 auto param_contrast = iotwebconf::Builder<iotwebconf::IntTParameter<int>>("c").label("Contrast").defaultValue(DEFAULT_CONTRAST).min(-2).max(2).build();
 auto param_saturation = iotwebconf::Builder<iotwebconf::IntTParameter<int>>("s").label("Saturation").defaultValue(DEFAULT_SATURATION).min(-2).max(2).build();
@@ -214,7 +214,7 @@ esp_err_t initialize_camera()
   log_v("initialize_camera");
 
   log_i("Frame size: %s", param_frame_size.value());
-  auto frame_size = lookup_frame_size(param_frame_size.value());
+  auto frame_size = FRAMESIZE_HVGA; // lookup_frame_size(param_frame_size.value());
   log_i("JPEG quality: %d", param_jpg_quality.value());
   auto jpeg_quality = param_jpg_quality.value();
   log_i("Frame duration: %d ms", param_frame_duration.value());
@@ -280,7 +280,7 @@ void update_camera_settings()
   camera->set_wpc(camera, param_wpc.value());
   camera->set_raw_gma(camera, param_raw_gma.value());
   camera->set_lenc(camera, param_lenc.value());
-  camera->set_hmirror(camera, param_hmirror.value());
+  camera->set_hmirror(camera, true);
   camera->set_vflip(camera, param_vflip.value());
   camera->set_dcw(camera, param_dcw.value());
   camera->set_colorbar(camera, param_colorbar.value());
@@ -326,7 +326,7 @@ void setup()
 
 #ifdef ARDUINO_USB_CDC_ON_BOOT
   // Delay for USB to connect/settle
-  delay(5000);
+  delay(2000);
 #endif
 
   log_i("Core debug level: %d", CORE_DEBUG_LEVEL);
@@ -389,14 +389,16 @@ void setup()
     delay(500);
   }
 
-  // Set up required URL handlers on the web server
-  web_server.on("/", HTTP_GET, handle_root);
+  // Set up required URL handlers on the web server 
+  // web_server.on("/", HTTP_GET, handle_root);
   web_server.on("/config", []
                 { iotWebConf.handleConfig(); });
   // Camera snapshot
   web_server.on("/snapshot", HTTP_GET, handle_snapshot);
   // Camera stream
   web_server.on("/stream", HTTP_GET, handle_stream);
+
+  web_server.on("/", HTTP_GET, handle_stream);
 
   web_server.onNotFound([]()
                         { iotWebConf.handleNotFound(); });
